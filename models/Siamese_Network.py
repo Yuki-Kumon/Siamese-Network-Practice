@@ -49,18 +49,38 @@ class Conv_layer(nn.Module):
         # initialization of class
         super(Conv_layer, self).__init__()
 
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-
-        self.conv = conv3x3(in_channels, out_channels)
+        self.conv1 = conv3x3(in_channels, out_channels)
+        self.conv2 = conv3x3(out_channels, out_channels)
         self.dropout = nn.Dropout2d(p=dropout_ratio)
         self.batchnorm = nn.BatchNorm2d(num_features=out_channels)
 
     def forward(self, x):
         # convolution
-        x = F.relu(self.batchnorm(self.conv(x)))
-        # dropout
-        x = self.dropout(x)
+        x = F.relu(self.batchnorm(self.conv1(x)))
+        x = F.relu(self.batchnorm(self.conv2(x)))
+        # pooling
+        x = F.max_pool2d(self.dropout(x), kernel_size=2, stride=2, return_indices=False)
+
+        return x
+
+
+class Fc_layer(nn.Module):
+    '''
+    全結合層
+    '''
+
+    def __init__(self, input_num, output_num):
+        # initialization of class
+        super(Fc_layer, self).__init__()
+
+        self.fc1 = nn.Linear(input_num, 1000)
+        self.fc2 = nn.Linear(1000, 100)
+        self.fc3 = nn.Linear(100, output_num)
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.fc3(x)
 
         return x
 
@@ -70,7 +90,7 @@ class CNN(nn.Module):
     Siamese Networkで用いる畳み込みニューラルネットワーク
     '''
 
-    def __init__(self, input_channels=3, depth=5, dropout_ratio=0.1):
+    def __init__(self, input_channels=3, depth=5, input_size=256, output_len=2, dropout_ratio=0.1):
         # initialization of class
         super(CNN, self).__init__()
 
@@ -81,12 +101,19 @@ class CNN(nn.Module):
             layer = Conv_layer(input_channels, output_channnels, dropout_ratio)
             self.layers.append(layer)
             input_channels = output_channnels
+            input_size = int(input_size / 2)
 
         self.layers = nn.ModuleList(self.layers)
+        self.fc_layer = Fc_layer(input_size**2 * output_channnels, output_len)
+
+    def flatten(self, x):
+        return x.view(x.size(0), -1)
 
     def forward(self, x):
         for module in self.layers:
             x = module(x)
+        x = self.flatten(x)
+        x = self.fc_layer(x)
 
         return x
 
@@ -96,12 +123,12 @@ class Siamese_Network(nn.Module):
     Siamese Network
     '''
 
-    def __init__(self, input_channels=3, depth=5, dropout_ratio=0.1):
+    def __init__(self, input_channels=3, depth=5, input_size=256, output_len=2, dropout_ratio=0.1):
         # initialization of class
         super(Siamese_Network, self).__init__()
 
         # create CNN
-        self.cnn = CNN(input_channels, depth, dropout_ratio)
+        self.cnn = CNN(input_channels, depth, input_size, output_len, dropout_ratio)
 
     def forward(self, x0, x1):
         return self.cnn(x0), self.cnn(x1)
@@ -112,33 +139,15 @@ if __name__ == '__main__':
     Sanity Check
     """
 
-    """
-    img = torch.from_numpy(np.random.rand(4, 3, 256, 256)).float()
-
-    # sanity check for Conv_layer
-    conv = Conv_layer(3, 16, 0.1)
-    nn.init.normal_(conv.conv.weight, 0.0, 1.0)
-    conv.eval()
-
-    # print(img.size())
-    out = conv(img)
-    print('sanity check for \"Conv_layer\" is passed')
-
-    # sanity check for CNN
-    cnn = CNN()
-    out = cnn(img)
-    print('sanity check for \"CNN\" is passed')
-    """
-
     from torchsummary import summary
 
     conv = Conv_layer(3, 16, 0.1)
     summary(conv, (3, 256, 256))
 
-    cnn = CNN()
+    cnn = CNN(input_size=256)
     summary(cnn, (3, 256, 256))
 
-    sim = Siamese_Network()
+    sim = Siamese_Network(input_size=256)
     img1 = torch.from_numpy(np.random.rand(4, 3, 256, 256)).float()
     img2 = torch.from_numpy(np.random.rand(4, 3, 256, 256)).float()
     _, _ = sim(img1, img2)

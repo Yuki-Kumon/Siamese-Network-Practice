@@ -2,7 +2,9 @@
 
 """
 Loss function
-copied from https://vaaaaaanquish.hatenablog.com/entry/2019/02/23/214036
+copied from
+https://vaaaaaanquish.hatenablog.com/entry/2019/02/23/214036
+https://github.com/delijati/pytorch-siamese/blob/master/contrastive.py
 Author :
     Yuki Kumon
 Last Update :
@@ -14,11 +16,12 @@ import torch
 
 
 class ContrastiveLoss(torch.nn.Module):
-    def __init__(self, margin=1.0):
+    def __init__(self, margin=5.0):
         super(ContrastiveLoss, self).__init__()
         self.margin = margin
 
     def forward(self, x0, x1, y):
+        y = y.float()
         diff = x0 - x1
         dist_sq = torch.sum(torch.pow(diff, 2), 1)
         dist = torch.sqrt(dist_sq)

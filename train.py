@@ -33,7 +33,7 @@ from absl.flags import FLAGS
 
 flags.DEFINE_string('cifar_path', './data/cifar-10-batches-py', 'cifar 10 dataset path')
 flags.DEFINE_float('same_rate', 0.5, 'positive rate when training')
-flags.DEFINE_integer('depth', 5, 'CNN depth')
+flags.DEFINE_integer('depth', 3, 'CNN depth')
 flags.DEFINE_float('dropout_ratio', 0.1, 'CNN dropout ratio')
 flags.DEFINE_integer('epoch', 20, 'epoch number')
 flags.DEFINE_float('lr', 0.01, 'learning rate')
@@ -116,7 +116,7 @@ def main(_argv):
 
     # execute training
     logging.info('start training')
-    for epoch_num in range(epoch_old, epoch_old + FLAGS.epoch):
+    for epoch_num in range(epoch_old + 1, epoch_old + FLAGS.epoch + 1):
         loader_num = np.random.choice([0, 1, 2, 3, 4])
         train(epoch_num, loader_num)
 
