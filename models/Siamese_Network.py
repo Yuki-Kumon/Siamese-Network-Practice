@@ -73,9 +73,9 @@ class Fc_layer(nn.Module):
         # initialization of class
         super(Fc_layer, self).__init__()
 
-        self.fc1 = nn.Linear(input_num, 1000)
-        self.fc2 = nn.Linear(1000, 100)
-        self.fc3 = nn.Linear(100, output_num)
+        self.fc1 = nn.Linear(input_num, 500)
+        self.fc2 = nn.Linear(500, 10)
+        self.fc3 = nn.Linear(10, output_num)
 
     def forward(self, x):
         x = self.fc1(x)
@@ -132,6 +132,9 @@ class Siamese_Network(nn.Module):
 
     def forward(self, x0, x1):
         return self.cnn(x0), self.cnn(x1)
+
+    def forward_once(self, x):
+        return self.cnn(x)
 
 
 if __name__ == '__main__':

@@ -82,6 +82,25 @@ class MyDataset(Dataset):
         return img, img2, same_label
 
 
+class TestDataset(MyDataset):
+    '''
+    dataset for test
+    '''
+
+    def __init__(self, dict, trans1=None):
+        super(TestDataset, self).__init__(dict, trans1, same_rate=0.5)
+
+    def __getitem__(self, idx):
+        data = self.data[idx]
+        img = self.image_reshape(data)
+        label = self.label[idx]
+
+        if self.trans1:
+            img = self.trans1(img)
+
+        return img, label
+
+
 def set_trans():
     trans1 = transforms.Compose([
         transforms.Resize((32, 32)),
@@ -109,7 +128,7 @@ def Dataloader_cifar_10(cifar_path, batch_size=16, shuffle=True):
     # set dataloader
     for i in train_path:
         train_loader.append(torch.utils.data.DataLoader(MyDataset(unpickle(i), trans1), batch_size, shuffle))
-    test_loader = torch.utils.data.DataLoader(MyDataset(unpickle(test_path), trans1), batch_size, shuffle)
+    test_loader = torch.utils.data.DataLoader(TestDataset(unpickle(test_path), trans1), batch_size, shuffle)
 
     return train_loader, test_loader
 
@@ -128,7 +147,9 @@ if __name__ == '__main__':
     dataset[100]
 
     # DataLoader sanity check
-    loader1, _ = Dataloader_cifar_10(data_path)
+    loader1, loader2 = Dataloader_cifar_10(data_path)
     for (img, img2, label) in (loader1[4]):
+        dummy = 0
+    for (img, label) in loader2:
         dummy = 0
     print("sanity check is passed")

@@ -25,23 +25,26 @@ from PIL import Image
 
 from tensorboardX import SummaryWriter
 
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 from absl import app, flags, logging
 from absl.flags import FLAGS
 
 
 flags.DEFINE_string('cifar_path', './data/cifar-10-batches-py', 'cifar 10 dataset path')
+flags.DEFINE_integer('input_image_size', 32, 'input imagsize(need to divided by 2**depth)')
+flags.DEFINE_integer('output_len', 2, 'size after dense layer')
 flags.DEFINE_float('same_rate', 0.5, 'positive rate when training')
-flags.DEFINE_integer('depth', 3, 'CNN depth')
+flags.DEFINE_integer('depth', 1, 'CNN depth')
 flags.DEFINE_float('dropout_ratio', 0.1, 'CNN dropout ratio')
 flags.DEFINE_integer('epoch', 20, 'epoch number')
 flags.DEFINE_float('lr', 0.01, 'learning rate')
 flags.DEFINE_float('momentum', 0.5, 'momentum')
 flags.DEFINE_bool('is_cuda', False, 'whether cuda is used or not')
 flags.DEFINE_bool('pre_trained', False, 'whether model is pretrained or not')
-flags.DEFINE_string('model_path', './model.tar', 'model path')
+flags.DEFINE_string('model_path', './output/model.tar', 'model path')
 flags.DEFINE_string('tensorboard_path', './tensorboard_log', 'tensorboardX logging dir')
+flags.DEFINE_string('eval_path', './output/output.png', 'evaluation image save path')
 
 
 def main(_argv):
@@ -56,7 +59,11 @@ def main(_argv):
         logging.info('cuda is not used')
 
     # set model
-    model = Siamese_Network(input_channels=3, depth=FLAGS.depth, dropout_ratio=FLAGS.dropout_ratio)
+    model = Siamese_Network(input_channels=3,
+                            depth=FLAGS.depth,
+                            input_size=FLAGS.input_image_size,
+                            output_len=FLAGS.output_len,
+                            dropout_ratio=FLAGS.dropout_ratio)
     if is_cuda:
         model = model.to('cuda')
     logging.info('model is created')
@@ -114,21 +121,70 @@ def main(_argv):
         # print('train epoch ', str(epoch), ', loss: ', str(loss.item()))
         logging.info('train epoch {}, loss: {}'.format(epoch, loss.item()))
 
+    # define save function
+    def save():
+        # save
+        torch.save({
+            'epoch': epoch_num,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+        },
+            FLAGS.model_path
+        )
+
     # execute training
     logging.info('start training')
     for epoch_num in range(epoch_old + 1, epoch_old + FLAGS.epoch + 1):
         loader_num = np.random.choice([0, 1, 2, 3, 4])
         train(epoch_num, loader_num)
+        save()
+    logging.info('training is finished at epoch {}'.format(epoch_num))
+
+    # define evaluation function
+    def eval():
+        '''
+        evalate function
+        2次元空間にプロットすることで分類を確かめる
+        '''
+        output_list = []
+        label_list = []
+        model.eval()
+        for batch_idx, (image1, label) in enumerate(test_loader):
+            # forwadr
+            optimizer.zero_grad()
+            if is_cuda:
+                image1 = image1.to('cuda')
+                label = label.to('cuda')
+            output = model.forward_once(image1)
+            if is_cuda:
+                image1 = image1.to('cpu')
+                label = label.to('cpu')
+            output_list.append(output.detach().numpy())
+            label_list.append(label.detach().numpy())
+
+        logging.info('evaluation is finished')
+        return np.array(output_list), np.array(label_list)
+
+    # execute evaluation
+    outputs, labels = eval()
+
+    # plot
+    def plot_cifar10(numpy_all, numpy_labels):
+        c = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff',
+             '#ff00ff', '#990000', '#999900', '#009900', '#009999']
+
+        for i in range(10):
+            f = numpy_all[np.where(numpy_labels == i)]
+            plt.plot(f[:, 0], f[:, 1], '.', c=c[i])
+        plt.legend(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+        plt.savefig(FLAGS.eval_path)
+
+    # execute plot
+    plot_cifar10(outputs, labels)
+    logging.info('plot is finished')
 
     # save
-    torch.save({
-        'epoch': epoch_num,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-    },
-        FLAGS.model_path
-    )
-    logging.info('trained model is saved')
+    save()
 
 
 if __name__ == '__main__':
