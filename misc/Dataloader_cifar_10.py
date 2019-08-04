@@ -108,8 +108,8 @@ def Dataloader_cifar_10(cifar_path, batch_size=16, shuffle=True):
 
     # set dataloader
     for i in train_path:
-        train_loader.append(torch.utils.data.DataLoader(MyDataset(unpickle(i), trans1), batch_size=16, shuffle=True))
-    test_loader = torch.utils.data.DataLoader(MyDataset(unpickle(test_path), trans1), batch_size=16, shuffle=True)
+        train_loader.append(torch.utils.data.DataLoader(MyDataset(unpickle(i), trans1), batch_size, shuffle))
+    test_loader = torch.utils.data.DataLoader(MyDataset(unpickle(test_path), trans1), batch_size, shuffle)
 
     return train_loader, test_loader
 
@@ -128,3 +128,7 @@ if __name__ == '__main__':
     dataset[100]
 
     # DataLoader sanity check
+    loader1, _ = Dataloader_cifar_10(data_path)
+    for (img, img2, label) in (loader1[4]):
+        dummy = 0
+    print("sanity check is passed")
