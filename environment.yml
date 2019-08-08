@@ -4,11 +4,12 @@ channels:
   - pytorch
 dependencies:
   - python==3.6.1
-  - opencv
-  - matplotlib
-  - pytorch
-  - torchvision
+  - opencv-python==3.4.0.12
+  - matplotlib=2.0.2=np112py36_0
+  - pytorch=1.0.1=py3.6_2
+  - torchvision=0.2.2=py_3
   - cudatoolkit=10.0
-  - pip
+  - absl-py=0.7.1=py36_0
+  - pip=9.0.1=py36_1
   - pip:
     - tensorboardx==1.6
