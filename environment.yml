@@ -1,7 +1,7 @@
 name: Siamese_Network
 channels:
   - conda-forge
-
+  - pytorch
 dependencies:
   - python==3.6.1
   - opencv
