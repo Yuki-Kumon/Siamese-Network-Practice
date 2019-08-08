@@ -8,7 +8,7 @@ dependencies:
   - matplotlib=2.0.2
   - pytorch=1.0.1
   - torchvision=0.2.2
-  - cudatoolkit=10.0
+  - cudatoolkit=8.0
   - absl-py=0.7.1
   - pip=9.0.1
   - pip:
