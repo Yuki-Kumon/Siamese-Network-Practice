@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 """
-特徴空間への埋め込み。
+Detect
 Author :
     Yuki Kumon
 Last Update :
     2019-08-07
 """
+
 
 # from torch.utils.data import Dataset
 # from torchvision import transforms
@@ -87,7 +88,7 @@ def main(_argv):
         logging.info('checkpoint is NOT loaded')
 
     # set dataloader
-    _, test_loader = Dataloader_cifar_10(FLAGS.cifar_path)
+    _, test_loader = Dataloader_cifar_10(FLAGS.cifar_path, shuffle=False)
     logging.info('dataloader is created')
 
     # define evaluation function
@@ -96,8 +97,8 @@ def main(_argv):
         evalate function
         2次元空間にプロットすることで分類を確かめる
         '''
-        output_list = []
-        label_list = []
+        # output_list = []
+        # label_list = []
         model.eval()
         for batch_idx, (image1, label) in enumerate(test_loader):
             # forwadr
@@ -109,29 +110,16 @@ def main(_argv):
             if is_cuda:
                 image1 = image1.to('cpu')
                 label = label.to('cpu')
-            output_list.append(output.detach().numpy())
-            label_list.append(label.detach().numpy())
+            if 'outputs' in locals():
+                outputs = image1
+            # output_list.append(output.detach().numpy())
+            # label_list.append(label.detach().numpy())
 
         logging.info('evaluation is finished')
         return np.array(output_list), np.array(label_list)
 
     # execute evaluation
     outputs, labels = eval()
-
-    # plot
-    def plot_cifar10(numpy_all, numpy_labels):
-        c = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#0000ff',
-             '#ff00ff', '#990000', '#999900', '#009900', '#009999']
-
-        for i in range(10):
-            f = numpy_all[np.where(numpy_labels == i)]
-            plt.plot(f[:, 0], f[:, 1], '.', c=c[i])
-        plt.legend(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
-        plt.savefig(FLAGS.eval_path)
-
-    # execute plot
-    plot_cifar10(outputs, labels)
-    logging.info('plot is finished')
 
 
 if __name__ == '__main__':
