@@ -10,5 +10,5 @@ dependencies:
   - torchvision
   - cudatoolkit=10.0
   - pip
-  -pip:
+  - pip:
     - tensorboardx==1.6
