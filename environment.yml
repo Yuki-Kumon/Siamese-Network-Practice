@@ -1,0 +1,11 @@
+name: Siamese_Network
+channels:
+  - conda-forge
+
+dependencies:
+  - python==3.6.1
+  - opencv
+  - matplotlib
+  - pytorch
+  - torchvision
+  - cudatoolkit=10.0
