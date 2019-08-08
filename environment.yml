@@ -4,7 +4,7 @@ channels:
   - pytorch
 dependencies:
   - python==3.6.1
-  - opencv-python==3.4.0.12
+  - opencv
   - matplotlib=2.0.2
   - pytorch=1.0.1
   - torchvision=0.2.2
